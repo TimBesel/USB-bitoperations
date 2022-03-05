@@ -18,7 +18,7 @@ int main(void) {
   uint8_t dataSize = (uint8_t)data[0];
   data = nrzi(data + 1, dataSize);
   transfer(data, dataSize);
-  uint32_t crcData = (uint32_t)crc(rData, 32, 0x8005);
+  uint16_t crcData = (uint16_t)crc(data, dataSize, 0x8005);
   transfer((packet_typ_t *)(&crcData), 16);
   return 0;
 }
