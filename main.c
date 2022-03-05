@@ -81,7 +81,7 @@ uint32_t crc(packet_typ_t *data, uint8_t dataSize, uint32_t pollynomial) {
   uint8_t highesExp = logOf2(pollynomial);
 
   for (uint8_t bIdx = 0; bIdx < (dataSize - dataSize % 8); bIdx++) {
-    uint8_t bit = (*(data + (bIdx / (8 * sizeof(packet_typ_t)))) >> ((8 * sizeof(packet_typ_t) - 1) - (bIdx % (8 * sizeof(packet_typ_t))))) & 0x01;
+    uint8_t bit = (*(data + (bIdx / (8 * sizeof(uint32_t)))) >> ((8 * sizeof(packet_typ_t) - 1) - (bIdx % (8 * sizeof(uint32_t))))) & 0x01;
     buffer = (uint32_t)(buffer << 1) | (bit);
 
     if ((buffer & (uint32_t)(1 << highesExp)) == (uint32_t)(1 << highesExp)) {
@@ -89,8 +89,8 @@ uint32_t crc(packet_typ_t *data, uint8_t dataSize, uint32_t pollynomial) {
     }
   }
 
-  for (uint8_t bIdx = 0; bIdx < dataSize % (8 * sizeof(packet_typ_t)); bIdx++) {
-    uint8_t bit = (*(data + (uint8_t)ceil((uint8_t)(dataSize / (8 * sizeof(packet_typ_t))))) >> ((dataSize % (8 * (uint8_t)sizeof(packet_typ_t))) - (bIdx + 1))) & 0x01;
+  for (uint8_t bIdx = 0; bIdx < dataSize % (8 * sizeof(uint32_t)); bIdx++) {
+    uint8_t bit = (*(data + (uint8_t)ceil((uint8_t)(dataSize / (8 * sizeof(uint32_t))))) >> ((dataSize % (8 * (uint8_t)sizeof(uint32_t))) - (bIdx + 1))) & 0x01;
     buffer = (uint32_t)(buffer << 1) | (bit);
 
     if ((buffer & (uint32_t)(1 << highesExp)) == (uint32_t)(1 << highesExp)) {
