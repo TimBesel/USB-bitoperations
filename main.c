@@ -11,16 +11,17 @@ packet_typ_t *bit_stuffing(packet_typ_t *data, datasize_typ_t dataSize);
 packet_typ_t *nrzi(packet_typ_t *data, datasize_typ_t dataSize);
 uint32_t crc(packet_typ_t *data, datasize_typ_t dataSize, uint32_t pollynomial);
 uint8_t logOf2(uint32_t n);
-void transfer(packet_typ_t *data, datasize_typ_t dataSize);
+void transfer(packet_typ_t *data, datasize_typ_t dataSize, uint8_t packetSize);
 
 int main(void) {
   packet_typ_t rData[20] = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
   packet_typ_t *data = bit_stuffing(rData, 640);
   datasize_typ_t dataSize = (datasize_typ_t)data[0];
   data = nrzi(data + 1, dataSize);
-  transfer(data, dataSize);
+  transfer(data, dataSize, 32);
   uint16_t crcData = (uint16_t)crc(data, dataSize, 0x8005);
-  transfer((packet_typ_t *)(&crcData), 16);
+  printf("crc: %x\n", crcData);
+  transfer((packet_typ_t *)(&crcData), 16, 16);
   return 0;
 }
 
@@ -120,14 +121,26 @@ uint8_t logOf2(uint32_t n) {
   return counter;
 }
 
-void transfer(packet_typ_t *data, datasize_typ_t dataSize) {
+void transfer(packet_typ_t *data, datasize_typ_t dataSize, uint8_t packetSize) {
   for (datasize_typ_t i = 0; i < (dataSize - dataSize % 8); i++) {
-    uint8_t bit = (*(data + (i / (8 * sizeof(packet_typ_t)))) >> ((8 * sizeof(packet_typ_t) - 1) - (i % (8 * sizeof(packet_typ_t))))) & 0x01;
+    uint8_t bit = (*(data + (i / packetSize)) >> ((packetSize - 1) - (i % packetSize))) & 0x01;
     printf("%u", bit);
   }
-  for (uint8_t i = 0; i < dataSize % (8 * sizeof(packet_typ_t)); i++) {
-    uint8_t bit = (*(data + (datasize_typ_t)ceil((datasize_typ_t)(dataSize / (8 * sizeof(packet_typ_t))))) >> ((dataSize % (8 * (datasize_typ_t)sizeof(packet_typ_t))) - (i + 1))) & 0x01;
+  for (uint8_t i = 0; i < dataSize % packetSize; i++) {
+    uint8_t bit = (*(data + (datasize_typ_t)ceil((datasize_typ_t)(dataSize / packetSize))) >> ((dataSize % packetSize) - (i + 1))) & 0x01;
     printf("%u", bit);
   }
   printf("\n");
 }
+
+// void transfer(packet_typ_t *data, datasize_typ_t dataSize) {
+//   for (datasize_typ_t i = 0; i < (dataSize - dataSize % 8); i++) {
+//     uint8_t bit = (*(data + (i / (8 * sizeof(packet_typ_t)))) >> ((8 * sizeof(packet_typ_t) - 1) - (i % (8 * sizeof(packet_typ_t))))) & 0x01;
+//     printf("%u", bit);
+//   }
+//   for (uint8_t i = 0; i < dataSize % (8 * sizeof(packet_typ_t)); i++) {
+//     uint8_t bit = (*(data + (datasize_typ_t)ceil((datasize_typ_t)(dataSize / (8 * sizeof(packet_typ_t))))) >> ((dataSize % (8 * (datasize_typ_t)sizeof(packet_typ_t))) - (i + 1))) & 0x01;
+//     printf("secound: %u", bit);
+//   }
+//   printf("\n");
+// }
